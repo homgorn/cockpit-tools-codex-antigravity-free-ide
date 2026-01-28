@@ -56,7 +56,7 @@ type Translate = (key: string, options?: Record<string, unknown>) => string;
 /** 格式化重置时间显示（相对时间 + 绝对时间） */
 export function formatCodexResetTime(
   resetTime: number | undefined,
-  locale: string,
+  _locale: string,
   t: Translate
 ): string {
   if (!resetTime) return '';
@@ -77,15 +77,13 @@ export function formatCodexResetTime(
   if (minutes > 0) parts.push(`${minutes}m`);
   
   const relative = parts.length > 0 ? parts.join(' ') : '<1m';
-  const absolute = formatCodexResetTimeAbsolute(resetTime, locale, t);
+  const absolute = formatCodexResetTimeAbsolute(resetTime);
 
   return `${relative} (${absolute})`;
 }
 
 export function formatCodexResetTimeAbsolute(
-  resetTime: number | undefined,
-  locale: string,
-  t: Translate
+  resetTime: number | undefined
 ): string {
   if (!resetTime) return '';
 
