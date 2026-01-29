@@ -56,7 +56,6 @@ type Translate = (key: string, options?: Record<string, unknown>) => string;
 /** 格式化重置时间显示（相对时间 + 绝对时间） */
 export function formatCodexResetTime(
   resetTime: number | undefined,
-  _locale: string,
   t: Translate
 ): string {
   if (!resetTime) return '';

@@ -8,7 +8,7 @@ import * as accountService from '../services/accountService';
 import './settings/Settings.css';
 import { 
   Github, User, Rocket, Save, FolderOpen,
-  AlertCircle, RefreshCw, Check, ExternalLink, Heart, MessageSquare
+  AlertCircle, RefreshCw, Heart, MessageSquare
 } from 'lucide-react';
 
 
@@ -26,6 +26,8 @@ interface GeneralConfig {
   language: string;
   theme: string;
   auto_refresh_minutes: number;
+  codex_auto_refresh_minutes: number;
+  close_behavior: 'ask' | 'minimize' | 'quit';
 }
 
 export function SettingsPage() {
@@ -55,6 +57,8 @@ export function SettingsPage() {
   const [language, setLanguage] = useState(getCurrentLanguage());
   const [theme, setTheme] = useState('system');
   const [autoRefresh, setAutoRefresh] = useState('5');
+  const [codexAutoRefresh, setCodexAutoRefresh] = useState('10');
+  const [closeBehavior, setCloseBehavior] = useState<'ask' | 'minimize' | 'quit'>('ask');
   const [generalLoaded, setGeneralLoaded] = useState(false);
   const generalSaveTimerRef = useRef<number | null>(null);
   const suppressGeneralSaveRef = useRef(false);
@@ -72,14 +76,6 @@ export function SettingsPage() {
   const [defaultPort, setDefaultPort] = useState(19528);
   const [needsRestart, setNeedsRestart] = useState(false);
   const [networkSaving, setNetworkSaving] = useState(false);
-  
-  // Update check states
-  const [updateChecking, setUpdateChecking] = useState(false);
-  const [updateResult, setUpdateResult] = useState<{
-    has_update: boolean;
-    latest_version: string;
-    download_url: string;
-  } | null>(null);
   
   // 检测配额重置任务状态
   const [hasActiveResetTasks, setHasActiveResetTasks] = useState(false);
@@ -107,11 +103,12 @@ export function SettingsPage() {
       window.clearTimeout(generalSaveTimerRef.current);
     }
 
-    if (!autoRefresh.trim()) {
+    if (!autoRefresh.trim() || !codexAutoRefresh.trim()) {
       return;
     }
 
     const autoRefreshNum = parseInt(autoRefresh, 10) || -1;
+    const codexAutoRefreshNum = parseInt(codexAutoRefresh, 10) || -1;
 
     if (suppressGeneralSaveRef.current) {
       suppressGeneralSaveRef.current = false;
@@ -124,6 +121,8 @@ export function SettingsPage() {
           language,
           theme,
           autoRefreshMinutes: autoRefreshNum,
+          codexAutoRefreshMinutes: codexAutoRefreshNum,
+          closeBehavior,
         });
         window.dispatchEvent(new Event('config-updated'));
       } catch (err) {
@@ -137,7 +136,7 @@ export function SettingsPage() {
         window.clearTimeout(generalSaveTimerRef.current);
       }
     };
-  }, [autoRefresh, generalLoaded, language, theme, t]);
+  }, [autoRefresh, codexAutoRefresh, closeBehavior, generalLoaded, language, theme, t]);
 
   useEffect(() => {
     const handleLanguageUpdated = (event: Event) => {
@@ -217,6 +216,29 @@ export function SettingsPage() {
       document.documentElement.setAttribute('data-theme', newTheme);
     }
   };
+
+  useEffect(() => {
+    if (theme !== 'system') {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = () => applyTheme('system');
+
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleChange);
+    } else {
+      mediaQuery.addListener(handleChange);
+    }
+
+    return () => {
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener('change', handleChange);
+      } else {
+        mediaQuery.removeListener(handleChange);
+      }
+    };
+  }, [theme]);
   
   const loadGeneralConfig = async () => {
     try {
@@ -224,6 +246,8 @@ export function SettingsPage() {
       setLanguage(normalizeLanguage(config.language));
       setTheme(config.theme);
       setAutoRefresh(String(config.auto_refresh_minutes));
+      setCodexAutoRefresh(String(config.codex_auto_refresh_minutes ?? 10));
+      setCloseBehavior(config.close_behavior || 'ask');
       // 同步语言
       changeLanguage(config.language);
       applyTheme(config.theme);
@@ -275,26 +299,7 @@ export function SettingsPage() {
 
   // 检查更新
   const handleCheckUpdate = async () => {
-    setUpdateChecking(true);
-    setUpdateResult(null);
-    try {
-      const info = await invoke<{
-        has_update: boolean;
-        latest_version: string;
-        current_version: string;
-        download_url: string;
-      }>('check_for_updates');
-      setUpdateResult({
-        has_update: info.has_update,
-        latest_version: info.latest_version,
-        download_url: info.download_url,
-      });
-    } catch (err) {
-      console.error('检查更新失败:', err);
-      alert(t('settings.about.checkFailed'));
-    } finally {
-      setUpdateChecking(false);
-    }
+    window.dispatchEvent(new Event('update-check-requested'));
   };
 
   return (
@@ -362,6 +367,24 @@ export function SettingsPage() {
                     <option value="light">{t('settings.general.themeLight')}</option>
                     <option value="dark">{t('settings.general.themeDark')}</option>
                     <option value="system">{t('settings.general.themeSystem')}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="settings-row">
+                <div className="row-label">
+                  <div className="row-title">{t('settings.general.closeBehavior')}</div>
+                  <div className="row-desc">{t('settings.general.closeBehaviorDesc')}</div>
+                </div>
+                <div className="row-control">
+                  <select 
+                    className="settings-select" 
+                    value={closeBehavior} 
+                    onChange={(e) => setCloseBehavior(e.target.value as 'ask' | 'minimize' | 'quit')}
+                  >
+                    <option value="ask">{t('settings.general.closeBehaviorAsk')}</option>
+                    <option value="minimize">{t('settings.general.closeBehaviorMinimize')}</option>
+                    <option value="quit">{t('settings.general.closeBehaviorQuit')}</option>
                   </select>
                 </div>
               </div>
@@ -433,6 +456,55 @@ export function SettingsPage() {
                       <span>{t('settings.general.refreshIntervalLimited')}</span>
                     </div>
                   )}
+                </div>
+              </div>
+
+              <div className="settings-row">
+                <div className="row-label">
+                  <div className="row-title">{t('settings.general.codexAutoRefresh')}</div>
+                  <div className="row-desc">{t('settings.general.codexAutoRefreshDesc')}</div>
+                </div>
+                <div className="row-control">
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <select
+                      className="settings-select"
+                      style={{ minWidth: '120px', width: 'auto' }}
+                      value={['-1', '2', '5', '10', '15'].includes(codexAutoRefresh) ? codexAutoRefresh : 'custom'}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === 'custom') {
+                          if (['-1', '2', '5', '10', '15'].includes(codexAutoRefresh)) {
+                            setCodexAutoRefresh('12');
+                          }
+                        } else {
+                          setCodexAutoRefresh(val);
+                        }
+                      }}
+                    >
+                      <option value="-1">{t('settings.general.autoRefreshDisabled')}</option>
+                      <option value="2">2 {t('settings.general.minutes')}</option>
+                      <option value="5">5 {t('settings.general.minutes')}</option>
+                      <option value="10">10 {t('settings.general.minutes')}</option>
+                      <option value="15">15 {t('settings.general.minutes')}</option>
+                      <option value="custom">{t('settings.general.autoRefreshCustom')}</option>
+                    </select>
+
+                    {!['-1', '2', '5', '10', '15'].includes(codexAutoRefresh) && (
+                      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                        <input
+                          type="number"
+                          min="1"
+                          className="settings-input"
+                          style={{ width: '80px', paddingRight: '24px' }}
+                          value={codexAutoRefresh}
+                          onChange={(e) => setCodexAutoRefresh(e.target.value)}
+                        />
+                        <span style={{ position: 'absolute', right: '8px', fontSize: '12px', color: 'var(--text-muted)' }}>
+                          {t('settings.general.minutes')}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -580,7 +652,6 @@ export function SettingsPage() {
                   <button 
                     className="btn btn-sm btn-ghost"
                     onClick={handleCheckUpdate}
-                    disabled={updateChecking}
                     style={{ 
                       fontSize: '12px', 
                       padding: '4px 10px',
@@ -589,25 +660,8 @@ export function SettingsPage() {
                       gap: '4px'
                     }}
                   >
-                    {updateChecking ? (
-                      <><RefreshCw size={14} className="animate-spin" /> {t('settings.about.checking')}</>
-                    ) : updateResult?.has_update ? (
-                      <><ExternalLink size={14} /> {t('settings.about.newVersion', { version: updateResult.latest_version })}</>
-                    ) : updateResult ? (
-                      <><Check size={14} /> {t('settings.about.upToDate')}</>
-                    ) : (
-                      <><RefreshCw size={14} /> {t('settings.about.checkUpdate')}</>
-                    )}
+                    <><RefreshCw size={14} /> {t('settings.about.checkUpdate')}</>
                   </button>
-                  {updateResult?.has_update && (
-                    <button
-                      className="btn btn-sm btn-primary"
-                      onClick={() => openLink(updateResult.download_url)}
-                      style={{ fontSize: '12px', padding: '4px 10px' }}
-                    >
-                      {t('settings.about.download')}
-                    </button>
-                  )}
                 </div>
               </div>
               <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>

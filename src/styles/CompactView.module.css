@@ -4,7 +4,11 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding-bottom: 24px;
+  padding: 12px 12px 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  --compact-radius: var(--radius-md);
   animation: fadeUp 0.4s ease both;
 }
 
@@ -15,7 +19,7 @@
   padding: 8px 10px;
   background: var(--bg-tertiary);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--compact-radius);
   font-size: 11px;
   font-weight: 600;
   color: var(--text-secondary);
@@ -31,7 +35,7 @@
   padding: 8px 12px;
   background: var(--bg-card);
   border: 1px solid var(--border-light);
-  border-radius: 8px;
+  border-radius: var(--compact-radius);
   flex-wrap: wrap;
   overflow: visible;
 }
@@ -55,7 +59,7 @@
   color: var(--text-secondary);
   cursor: grab;
   padding: 4px 8px 4px 4px;
-  border-radius: 6px;
+  border-radius: var(--compact-radius);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
   border: 1px solid transparent;
@@ -109,7 +113,7 @@
   padding: 8px 10px;
   background: var(--bg-card);
   border: 1px solid var(--border-light);
-  border-radius: 8px;
+  border-radius: var(--compact-radius);
   cursor: pointer;
   transition: all 0.15s ease;
   min-width: 0;
@@ -237,6 +241,32 @@
   color: var(--danger);
 }
 
+.switchBtn {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--compact-radius);
+  border: 1px solid var(--border-light);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.switchBtn:hover:not(:disabled) {
+  color: var(--text-primary);
+  border-color: var(--border);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+}
+
+.switchBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .current {
   flex-shrink: 0;
   width: 20px;
@@ -276,7 +306,7 @@
   padding: 6px;
   background: var(--bg-secondary);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--compact-radius);
   box-shadow: var(--shadow-md);
   z-index: 100;
 }
@@ -288,7 +318,7 @@
   padding: 6px;
   background: var(--bg-secondary);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--compact-radius);
   box-shadow: var(--shadow-lg);
 }
 
@@ -322,7 +352,7 @@
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: var(--compact-radius);
   transition: all 0.15s;
   opacity: 0.6;
 }

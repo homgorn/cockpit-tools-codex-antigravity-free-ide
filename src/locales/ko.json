@@ -50,7 +50,9 @@
       "themeSystem": "시스템 설정",
       "accountManagement": "계정 관리",
       "autoRefresh": "Antigravity 자동 새로고침 할당량",
+      "codexAutoRefresh": "Codex 자동 새로고침 할당량",
       "autoRefreshDesc": "백그라운드 업데이트 빈도",
+      "codexAutoRefreshDesc": "백그라운드 업데이트 빈도",
       "autoRefreshDisabled": "비활성화됨",
       "autoRefreshCustom": "사용자 정의...",
       "every15min": "15분마다",
@@ -61,8 +63,8 @@
       "storageTitle": "디렉터리 및 저장소",
       "dataDir": "데이터 디렉터리",
       "dataDirDesc": "계정 및 구성 파일 저장 위치.",
-      "fpDir": "지문 저장소",
-      "fpDirDesc": "기기 지문 파일 저장 위치."
+      "fpDir": "Antigravity 저장소",
+      "fpDirDesc": "Antigravity 데이터 파일 저장 위치."
     },
     "network": {
       "apiTitle": "Antigravity Cockpit API",
@@ -125,6 +127,8 @@
     "status": {
       "current": "현재 사용 중",
       "disabled": "비활성화됨",
+      "authInvalid": "Invalid credentials",
+      "refreshFailed": "Refresh failed",
       "normal": "정상",
       "forbidden": "403",
       "forbidden_tooltip": "API가 403 Forbidden을 반환했습니다. 계정이 Gemini Code Assist에 접근할 수 없습니다",
@@ -161,6 +165,7 @@
       "default": "기본값",
       "overall": "전체 할당량순",
       "byGroup": "{{group}} 할당량순",
+      "byGroupReset": "{{group}} 재설정 시간",
       "createdAt": "생성 시간순",
       "descTooltip": "내림차순, 오름차순으로 전환 클릭",
       "ascTooltip": "오름차순, 내림차순으로 전환 클릭",
@@ -531,6 +536,15 @@
     "message": "현재 버전은 v{{current}}입니다. 새로운 버전을 사용할 수 있습니다.",
     "action": "지금 다운로드"
   },
+  "closeDialog": {
+    "title": "창 닫기",
+    "description": "창을 닫을 때의 동작을 선택하세요",
+    "minimize": "트레이로 최소화",
+    "minimizeDesc": "앱은 백그라운드에서 계속 실행됩니다",
+    "quit": "앱 종료",
+    "quitDesc": "애플리케이션을 완전히 종료합니다",
+    "remember": "내 선택을 기억하고 다시 묻지 않기"
+  },
   "group_settings": {
     "title": "그룹 관리",
     "group_list": "그룹 목록",
@@ -569,7 +583,8 @@
       "portInUseTitle": "포트 사용 중",
       "portInUseConfirm": "포트 {{port}}가 사용 중입니다. 이 포트를 사용하는 프로세스를 종료할까요?",
       "portCloseFailed": "포트 종료 실패: {{error}}",
-      "portStillInUse": "포트 {{port}}가 여전히 사용 중입니다."
+      "portStillInUse": "포트 {{port}}가 여전히 사용 중입니다.",
+      "portInUseAction": "포트 종료 후 다시 시도"
     },
     "token": {
       "desc": "auth.json 내용 또는 계정 JSON 데이터를 붙여넣으세요",
@@ -635,6 +650,8 @@
     "sort": {
       "weekly": "주간 할당량",
       "hourly": "5시간 할당량",
+      "weeklyReset": "주간 할당량 재설정 시간",
+      "hourlyReset": "5시간 할당량 재설정 시간",
       "descTooltip": "내림차순 (클릭하여 오름차순으로 전환)",
       "ascTooltip": "오름차순 (클릭하여 내림차순으로 전환)",
       "toggleDirection": "정렬 방향 전환",

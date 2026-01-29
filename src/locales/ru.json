@@ -50,7 +50,9 @@
       "themeSystem": "Системная",
       "accountManagement": "Управление аккаунтами",
       "autoRefresh": "Автообновление квоты Antigravity",
+      "codexAutoRefresh": "Автообновление квоты Codex",
       "autoRefreshDesc": "Частота фонового обновления",
+      "codexAutoRefreshDesc": "Частота фонового обновления",
       "autoRefreshDisabled": "Выключено",
       "autoRefreshCustom": "Настроить...",
       "every15min": "Каждые 15 минут",
@@ -61,8 +63,8 @@
       "storageTitle": "Каталоги и хранилище",
       "dataDir": "Каталог данных",
       "dataDirDesc": "Место хранения аккаунтов и конфигурационных файлов.",
-      "fpDir": "Хранилище отпечатков",
-      "fpDirDesc": "Место хранения файлов отпечатков устройств."
+      "fpDir": "Хранилище Antigravity",
+      "fpDirDesc": "Место хранения файлов данных Antigravity."
     },
     "network": {
       "apiTitle": "Antigravity Cockpit API",
@@ -125,6 +127,8 @@
     "status": {
       "current": "Текущий",
       "disabled": "Отключен",
+      "authInvalid": "Invalid credentials",
+      "refreshFailed": "Refresh failed",
       "normal": "Нормальный",
       "forbidden": "403",
       "forbidden_tooltip": "API вернул 403 Forbidden, аккаунт не имеет доступа к Gemini Code Assist",
@@ -161,6 +165,7 @@
       "default": "По умолчанию",
       "overall": "По общей квоте",
       "byGroup": "По квоте {{group}}",
+      "byGroupReset": "По времени сброса {{group}}",
       "createdAt": "По времени создания",
       "descTooltip": "По убыванию, переключить на возрастание",
       "ascTooltip": "По возрастанию, переключить на убывание",
@@ -531,6 +536,15 @@
     "message": "Текущая версия v{{current}}, доступна новая версия.",
     "action": "Скачать сейчас"
   },
+  "closeDialog": {
+    "title": "Закрыть окно",
+    "description": "Выберите действие при закрытии окна",
+    "minimize": "Свернуть в трей",
+    "minimizeDesc": "Приложение продолжит работать в фоне",
+    "quit": "Выйти из приложения",
+    "quitDesc": "Полностью закрыть приложение",
+    "remember": "Запомнить мой выбор и больше не спрашивать"
+  },
   "group_settings": {
     "title": "Управление группами",
     "group_list": "Список групп",
@@ -569,7 +583,8 @@
       "portInUseTitle": "Порт занят",
       "portInUseConfirm": "Порт {{port}} занят. Закрыть процесс, который использует этот порт?",
       "portCloseFailed": "Не удалось закрыть порт: {{error}}",
-      "portStillInUse": "Порт {{port}} все еще занят."
+      "portStillInUse": "Порт {{port}} все еще занят.",
+      "portInUseAction": "Закрыть порт и повторить"
     },
     "token": {
       "desc": "Вставьте содержимое auth.json или JSON данных аккаунта",
@@ -635,6 +650,8 @@
     "sort": {
       "weekly": "Недельная квота",
       "hourly": "5-часовая квота",
+      "weeklyReset": "Время еженедельного сброса",
+      "hourlyReset": "Время сброса 5-часовой квоты",
       "descTooltip": "По убыванию (нажмите для возрастания)",
       "ascTooltip": "По возрастанию (нажмите для убывания)",
       "toggleDirection": "Изменить порядок",

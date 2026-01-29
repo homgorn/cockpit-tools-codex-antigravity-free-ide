@@ -50,7 +50,9 @@
       "themeSystem": "Sistema",
       "accountManagement": "Gestione Account",
       "autoRefresh": "Aggiornamento automatico quota Antigravity",
+      "codexAutoRefresh": "Aggiornamento automatico quota Codex",
       "autoRefreshDesc": "Frequenza di aggiornamento in background",
+      "codexAutoRefreshDesc": "Frequenza di aggiornamento in background",
       "autoRefreshDisabled": "Disabilitato",
       "autoRefreshCustom": "Personalizzato...",
       "every15min": "Ogni 15 minuti",
@@ -61,8 +63,8 @@
       "storageTitle": "Directories & Storage",
       "dataDir": "Data Directory",
       "dataDirDesc": "Storage location for accounts and configuration files.",
-      "fpDir": "Fingerprint Storage",
-      "fpDirDesc": "Storage location for device fingerprint files."
+      "fpDir": "Archiviazione Antigravity",
+      "fpDirDesc": "Posizione dei file di dati di Antigravity."
     },
     "network": {
       "apiTitle": "Antigravity Cockpit API",
@@ -125,6 +127,8 @@
     "status": {
       "current": "Corrente",
       "disabled": "Disabilitato",
+      "authInvalid": "Invalid credentials",
+      "refreshFailed": "Refresh failed",
       "normal": "Normale",
       "forbidden": "403",
       "forbidden_tooltip": "API ha restituito 403 Forbidden, l'account non ha accesso a Gemini Code Assist",
@@ -161,6 +165,7 @@
       "default": "Predefinito",
       "overall": "Per quota complessiva",
       "byGroup": "Per quota di {{group}}",
+      "byGroupReset": "Per ora di reset {{group}}",
       "createdAt": "Per data di creazione",
       "descTooltip": "Decrescente, clicca per Ascendente",
       "ascTooltip": "Ascendente, clicca per Decrescente",
@@ -531,6 +536,15 @@
     "message": "Versione attuale v{{current}}, è disponibile una nuova versione.",
     "action": "Scarica ora"
   },
+  "closeDialog": {
+    "title": "Chiudi finestra",
+    "description": "Scegli un'azione quando chiudi la finestra",
+    "minimize": "Riduci nell'area di notifica",
+    "minimizeDesc": "L'app continuerà a funzionare in background",
+    "quit": "Chiudi l'app",
+    "quitDesc": "Chiude completamente l'applicazione",
+    "remember": "Ricorda la mia scelta e non chiedere più"
+  },
   "group_settings": {
     "title": "Gestione gruppi",
     "group_list": "Elenco gruppi",
@@ -569,7 +583,8 @@
       "portInUseTitle": "Porta in uso",
       "portInUseConfirm": "La porta {{port}} è in uso. Chiudere il processo che usa questa porta?",
       "portCloseFailed": "Impossibile chiudere la porta: {{error}}",
-      "portStillInUse": "La porta {{port}} è ancora in uso."
+      "portStillInUse": "La porta {{port}} è ancora in uso.",
+      "portInUseAction": "Chiudi la porta e riprova"
     },
     "token": {
       "desc": "Incolla il contenuto di auth.json o i dati JSON dell'account",
@@ -635,6 +650,8 @@
     "sort": {
       "weekly": "Quota settimanale",
       "hourly": "Quota 5 ore",
+      "weeklyReset": "Ora di reset settimanale",
+      "hourlyReset": "Ora di reset 5 ore",
       "descTooltip": "Decrescente (clicca per Ascendente)",
       "ascTooltip": "Ascendente (clicca per Decrescente)",
       "toggleDirection": "Inverti direzione",

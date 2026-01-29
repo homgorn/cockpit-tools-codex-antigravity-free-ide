@@ -733,6 +733,8 @@ fn handle_set_language(language: &str, source: Option<&str>) -> Result<String, S
         language: normalized.clone(),
         theme: current.theme,
         auto_refresh_minutes: current.auto_refresh_minutes,
+        codex_auto_refresh_minutes: current.codex_auto_refresh_minutes,
+        close_behavior: current.close_behavior,
     };
 
     config::save_user_config(&new_config)?;

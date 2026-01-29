@@ -1,16 +1,21 @@
 import { useEffect, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { useAccountStore } from '../stores/useAccountStore';
+import { useCodexAccountStore } from '../stores/useCodexAccountStore';
 
 interface GeneralConfig {
   language: string;
   theme: string;
   auto_refresh_minutes: number;
+  codex_auto_refresh_minutes: number;
+  close_behavior: string;
 }
 
 export function useAutoRefresh() {
   const { refreshAllQuotas, syncCurrentFromClient } = useAccountStore();
-  const intervalRef = useRef<number | null>(null);
+  const { refreshAllQuotas: refreshAllCodexQuotas } = useCodexAccountStore();
+  const agIntervalRef = useRef<number | null>(null);
+  const codexIntervalRef = useRef<number | null>(null);
 
   const setupAutoRefresh = async () => {
     try {
@@ -33,7 +38,9 @@ export function useAutoRefresh() {
               await invoke('save_general_config', {
                 language: config.language,
                 theme: config.theme,
-                autoRefreshMinutes: 2
+                autoRefreshMinutes: 2,
+                codexAutoRefreshMinutes: config.codex_auto_refresh_minutes,
+                closeBehavior: config.close_behavior || 'ask',
               });
               config.auto_refresh_minutes = 2;
             }
@@ -44,17 +51,21 @@ export function useAutoRefresh() {
       }
       
       // 清除旧的定时器
-      if (intervalRef.current) {
-        window.clearInterval(intervalRef.current);
-        intervalRef.current = null;
+      if (agIntervalRef.current) {
+        window.clearInterval(agIntervalRef.current);
+        agIntervalRef.current = null;
+      }
+      if (codexIntervalRef.current) {
+        window.clearInterval(codexIntervalRef.current);
+        codexIntervalRef.current = null;
       }
 
       if (config.auto_refresh_minutes > 0) {
-        console.log(`[AutoRefresh] 已启用: 每 ${config.auto_refresh_minutes} 分钟`);
+        console.log(`[AutoRefresh] Antigravity 已启用: 每 ${config.auto_refresh_minutes} 分钟`);
         
         const ms = config.auto_refresh_minutes * 60 * 1000;
         
-        intervalRef.current = window.setInterval(async () => {
+        agIntervalRef.current = window.setInterval(async () => {
           console.log('[AutoRefresh] 触发定时配额刷新...');
           try {
             // 先尝试同步本地客户端的当前账号
@@ -67,7 +78,22 @@ export function useAutoRefresh() {
           }
         }, ms);
       } else {
-        console.log('[AutoRefresh] 已禁用');
+        console.log('[AutoRefresh] Antigravity 已禁用');
+      }
+
+      if (config.codex_auto_refresh_minutes > 0) {
+        console.log(`[AutoRefresh] Codex 已启用: 每 ${config.codex_auto_refresh_minutes} 分钟`);
+        const codexMs = config.codex_auto_refresh_minutes * 60 * 1000;
+        codexIntervalRef.current = window.setInterval(async () => {
+          console.log('[AutoRefresh] 触发 Codex 配额刷新...');
+          try {
+            await refreshAllCodexQuotas();
+          } catch (e) {
+            console.error('[AutoRefresh] Codex 刷新失败:', e);
+          }
+        }, codexMs);
+      } else {
+        console.log('[AutoRefresh] Codex 已禁用');
       }
     } catch (err) {
       console.error('[AutoRefresh] 加载配置失败:', err);
@@ -87,10 +113,13 @@ export function useAutoRefresh() {
     window.addEventListener('config-updated', handleConfigUpdate);
 
     return () => {
-      if (intervalRef.current) {
-        window.clearInterval(intervalRef.current);
+      if (agIntervalRef.current) {
+        window.clearInterval(agIntervalRef.current);
+      }
+      if (codexIntervalRef.current) {
+        window.clearInterval(codexIntervalRef.current);
       }
       window.removeEventListener('config-updated', handleConfigUpdate);
     };
-  }, [refreshAllQuotas]);
+  }, [refreshAllCodexQuotas, refreshAllQuotas, syncCurrentFromClient]);
 }

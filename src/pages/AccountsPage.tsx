@@ -40,7 +40,8 @@ import {
   formatResetTimeDisplay,
   getSubscriptionTier,
   getDisplayModels,
-  getModelShortName
+  getModelShortName,
+  matchModelName
 } from '../utils/account'
 import { listen, UnlistenFn } from '@tauri-apps/api/event'
 import { save } from '@tauri-apps/plugin-dialog'
@@ -106,6 +107,9 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
   const [switching, setSwitching] = useState<string | null>(null)
   const [importing, setImporting] = useState(false)
   const [exporting, setExporting] = useState(false)
+  const [refreshWarnings, setRefreshWarnings] = useState<
+    Record<string, { kind: 'auth' | 'error'; message: string }>
+  >({})
   const [message, setMessage] = useState<{
     text: string
     tone?: 'error'
@@ -122,7 +126,6 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
     message: string
   } | null>(null)
   const [deleting, setDeleting] = useState(false)
-
   // 指纹选择弹框
   const [fingerprints, setFingerprints] = useState<FingerprintWithStats[]>([])
   const [showFpSelectModal, setShowFpSelectModal] = useState<string | null>(
@@ -138,10 +141,9 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
   // 分组管理
   const [showGroupModal, setShowGroupModal] = useState(false)
   const [displayGroups, setDisplayGroups] = useState<DisplayGroup[]>([])
-  const [sortBy, setSortBy] = useState<'overall' | 'created_at' | string>(
-    'overall'
-  )
+  const [sortBy, setSortBy] = useState<'overall' | 'created_at' | string>('overall')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
+  const resetSortPrefix = 'reset:'
 
   // Compact view model sorting
   const [compactGroupOrder, setCompactGroupOrder] = useState<string[]>([])
@@ -190,6 +192,35 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
     return quotas
   }
 
+  const getGroupResetTimestamp = (
+    account: Account,
+    group: DisplayGroup
+  ): number | null => {
+    if (!account.quota?.models?.length) {
+      return null
+    }
+    const groupModelIds = group.models.map((id) => id.toLowerCase())
+    let earliest: number | null = null
+    for (const model of account.quota.models) {
+      const modelName = model.name.toLowerCase()
+      const belongsToGroup = groupModelIds.some((id) =>
+        matchModelName(modelName, id)
+      )
+      if (!belongsToGroup) {
+        continue
+      }
+      const parsed = new Date(model.reset_time)
+      if (Number.isNaN(parsed.getTime())) {
+        continue
+      }
+      const timestamp = parsed.getTime()
+      if (earliest === null || timestamp < earliest) {
+        earliest = timestamp
+      }
+    }
+    return earliest
+  }
+
   // 根据分组配置获取模型所属分组的名称
   const getGroupNameForModel = (modelId: string): string | null => {
     for (const group of displayGroups) {
@@ -230,6 +261,20 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
         const diff = b.created_at - a.created_at
         return sortDirection === 'desc' ? diff : -diff
       })
+    } else if (sortBy.startsWith(resetSortPrefix) && displayGroups.length > 0) {
+      const targetGroupId = sortBy.slice(resetSortPrefix.length)
+      const targetGroup = displayGroups.find((group) => group.id === targetGroupId)
+      if (targetGroup) {
+        result.sort((a, b) => {
+          const aReset = getGroupResetTimestamp(a, targetGroup)
+          const bReset = getGroupResetTimestamp(b, targetGroup)
+          if (aReset === null && bReset === null) return 0
+          if (aReset === null) return 1
+          if (bReset === null) return -1
+          const diff = bReset - aReset
+          return sortDirection === 'desc' ? diff : -diff
+        })
+      }
     } else if (
       sortBy !== 'default' &&
       sortBy !== 'overall' &&
@@ -583,20 +628,43 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
     setRefreshing(accountId)
     try {
       await refreshQuota(accountId)
+      const target = accounts.find((acc) => acc.id === accountId)
+      if (target) {
+        setRefreshWarnings((prev) => {
+          if (!prev[target.email]) return prev
+          const next = { ...prev }
+          delete next[target.email]
+          return next
+        })
+      }
     } catch (e) {
       console.error(e)
+      const target = accounts.find((acc) => acc.id === accountId)
+      if (target) {
+        const reason = normalizeWarningMessage(String(e))
+        setRefreshWarnings((prev) => ({
+          ...prev,
+          [target.email]: {
+            kind: isAuthFailure(reason) ? 'auth' : 'error',
+            message: reason
+          }
+        }))
+      }
+    } finally {
+      setRefreshing(null)
     }
-    setRefreshing(null)
   }
 
   const handleRefreshAll = async () => {
     setRefreshingAll(true)
     try {
-      await refreshAllQuotas()
+      const stats = await refreshAllQuotas()
+      setRefreshWarnings(buildWarningMapFromDetails(stats.details || []))
     } catch (e) {
       console.error(e)
+    } finally {
+      setRefreshingAll(false)
     }
-    setRefreshingAll(false)
   }
 
   const handleDelete = (accountId: string) => {
@@ -978,6 +1046,64 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
     )
   }
 
+  const normalizeWarningMessage = (raw: string) =>
+    raw.replace(/^Error:\s*/i, '').trim()
+
+  const isAuthFailure = (message: string) => {
+    const lower = message.toLowerCase()
+    return (
+      lower.includes('invalid_grant') ||
+      lower.includes('unauthorized') ||
+      lower.includes('unauthenticated') ||
+      lower.includes('invalid authentication') ||
+      lower.includes('401')
+    )
+  }
+
+  const parseRefreshDetail = (
+    detail: string
+  ): { email: string; reason: string } | null => {
+    const match = detail.match(/^Account\s+(.+?):\s+(.+)$/)
+    if (!match) return null
+    const email = match[1].trim()
+    let reason = match[2].trim()
+    reason = reason.replace(/^Fetch quota failed\s*-\s*/i, '')
+    reason = reason.replace(/^Save quota failed\s*-\s*/i, '')
+    return { email, reason }
+  }
+
+  const buildWarningMapFromDetails = (details: string[]) => {
+    const next: Record<string, { kind: 'auth' | 'error'; message: string }> = {}
+    details.forEach((detail) => {
+      const parsed = parseRefreshDetail(detail)
+      if (!parsed) return
+      const reason = normalizeWarningMessage(parsed.reason)
+      next[parsed.email] = {
+        kind: isAuthFailure(reason) ? 'auth' : 'error',
+        message: reason
+      }
+    })
+    return next
+  }
+
+  useEffect(() => {
+    if (Object.keys(refreshWarnings).length === 0) return
+    const existing = new Set(accounts.map((acc) => acc.email))
+    setRefreshWarnings((prev) => {
+      let changed = false
+      const next: Record<string, { kind: 'auth' | 'error'; message: string }> =
+        {}
+      Object.entries(prev).forEach(([email, warning]) => {
+        if (existing.has(email)) {
+          next[email] = warning
+        } else {
+          changed = true
+        }
+      })
+      return changed ? next : prev
+    })
+  }, [accounts, refreshWarnings])
+
   // 渲染卡片视图
   const renderGridView = () => (
     <div className="accounts-grid">
@@ -988,6 +1114,15 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
         const displayModels = getDisplayModels(account.quota)
         const isDisabled = account.disabled
         const isSelected = selected.has(account.id)
+        const warning = refreshWarnings[account.email]
+        const warningLabel =
+          warning?.kind === 'auth'
+            ? t('accounts.status.authInvalid')
+            : t('accounts.status.refreshFailed')
+        const warningTitle = warning?.message || ''
+        const disabledTitle = isDisabled
+          ? `${t('accounts.status.disabled')}${account.disabled_reason ? `: ${account.disabled_reason}` : ''}`
+          : ''
 
         // 调试日志：当没有配额数据时输出详细信息
         if (displayModels.length === 0) {
@@ -1021,6 +1156,18 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
               {isCurrent && (
                 <span className="current-tag">
                   {t('accounts.status.current')}
+                </span>
+              )}
+              {warning && (
+                <span className="status-pill warning" title={warningTitle}>
+                  <CircleAlert size={12} />
+                  {warningLabel}
+                </span>
+              )}
+              {isDisabled && (
+                <span className="status-pill disabled" title={disabledTitle}>
+                  <CircleAlert size={12} />
+                  {t('accounts.status.disabled')}
                 </span>
               )}
               <span className={`tier-badge ${tier.toLowerCase()}`}>
@@ -1274,7 +1421,7 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
                 key={account.id}
                 className={`${styles.card} ${isCurrent ? styles.cardCurrent : ''} ${isSelected ? styles.cardSelected : ''} ${isSwitching ? styles.cardSwitching : ''}`}
                 onClick={() => {
-                  if (!switching) handleSwitch(account.id)
+                  if (!switching) toggleSelect(account.id)
                 }}
                 title={account.email}
                 style={{ pointerEvents: switching ? 'none' : undefined }}
@@ -1316,6 +1463,27 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
                     </span>
                   )}
                 </div>
+                <button
+                  type="button"
+                  className={styles.switchBtn}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleSwitch(account.id)
+                  }}
+                  disabled={isSwitching}
+                  title={
+                    isCurrent
+                      ? t('accounts.actions.switch')
+                      : t('accounts.actions.switchTo')
+                  }
+                  aria-label={
+                    isCurrent
+                      ? t('accounts.actions.switch')
+                      : t('accounts.actions.switchTo')
+                  }
+                >
+                  <Play size={12} />
+                </button>
               </div>
             )
           })}
@@ -1391,6 +1559,15 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
             const tier = getSubscriptionTier(account.quota)
             const tierLabel = t(`accounts.tier.${tier.toLowerCase()}`, tier)
             const displayModels = getDisplayModels(account.quota)
+            const warning = refreshWarnings[account.email]
+            const warningLabel =
+              warning?.kind === 'auth'
+                ? t('accounts.status.authInvalid')
+                : t('accounts.status.refreshFailed')
+            const warningTitle = warning?.message || ''
+            const disabledTitle = account.disabled
+              ? `${t('accounts.status.disabled')}${account.disabled_reason ? `: ${account.disabled_reason}` : ''}`
+              : ''
 
             return (
               <tr key={account.id} className={isCurrent ? 'current' : ''}>
@@ -1421,7 +1598,14 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
                         {tierLabel}
                       </span>
                       {account.disabled && (
-                        <span className="status-text disabled">
+                        <span className="status-pill warning" title={warningTitle}>
+                          <CircleAlert size={12} />
+                          {warningLabel}
+                        </span>
+                      )}
+                      {account.disabled && (
+                        <span className="status-pill disabled" title={disabledTitle}>
+                          <CircleAlert size={12} />
                           {t('accounts.status.disabled')}
                         </span>
                       )}
@@ -1643,6 +1827,11 @@ export function AccountsPage({ onNavigate }: AccountsPageProps) {
                       group: group.name,
                       defaultValue: `按 ${group.name} 配额`
                     })}
+                  </option>
+                ))}
+                {displayGroups.map(group => (
+                  <option key={`${group.id}-reset`} value={`${resetSortPrefix}${group.id}`}>
+                    {t('accounts.sort.byGroupReset', { group: group.name, defaultValue: `按 ${group.name} 重置时间` })}
                   </option>
                 ))}
               </select>

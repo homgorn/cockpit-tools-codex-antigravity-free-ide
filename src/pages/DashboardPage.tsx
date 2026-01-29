@@ -17,8 +17,8 @@ interface DashboardPageProps {
 }
 
 export function DashboardPage({ onNavigate }: DashboardPageProps) {
-  const { t, i18n } = useTranslation();
-  const locale = i18n.language || 'zh-CN';
+  const { t } = useTranslation();
+
   
   // Antigravity Data
   const { 
@@ -263,7 +263,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
             </div>
             {account.quota?.hourly_reset_time && (
               <div className="mini-reset-time">
-                {formatCodexResetTime(account.quota.hourly_reset_time, locale, t)}
+                {formatCodexResetTime(account.quota.hourly_reset_time, t)}
               </div>
             )}
           </div>
@@ -283,7 +283,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
             </div>
             {account.quota?.weekly_reset_time && (
               <div className="mini-reset-time">
-                {formatCodexResetTime(account.quota.weekly_reset_time, locale, t)}
+                {formatCodexResetTime(account.quota.weekly_reset_time, t)}
               </div>
             )}
           </div>

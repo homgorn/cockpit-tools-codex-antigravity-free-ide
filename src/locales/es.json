@@ -50,7 +50,9 @@
       "themeSystem": "Sistema",
       "accountManagement": "Gestión de Cuentas",
       "autoRefresh": "Actualización automática de cuota de Antigravity",
+      "codexAutoRefresh": "Actualización automática de cuota de Codex",
       "autoRefreshDesc": "Frecuencia de actualización en segundo plano",
+      "codexAutoRefreshDesc": "Frecuencia de actualización en segundo plano",
       "autoRefreshDisabled": "Deshabilitado",
       "autoRefreshCustom": "Personalizado...",
       "every15min": "Cada 15 minutos",
@@ -61,8 +63,8 @@
       "storageTitle": "Directories & Storage",
       "dataDir": "Data Directory",
       "dataDirDesc": "Storage location for accounts and configuration files.",
-      "fpDir": "Fingerprint Storage",
-      "fpDirDesc": "Storage location for device fingerprint files."
+      "fpDir": "Almacenamiento de Antigravity",
+      "fpDirDesc": "Ubicación de los archivos de datos de Antigravity."
     },
     "network": {
       "apiTitle": "Antigravity Cockpit API",
@@ -125,6 +127,8 @@
     "status": {
       "current": "Actual",
       "disabled": "Deshabilitada",
+      "authInvalid": "Invalid credentials",
+      "refreshFailed": "Refresh failed",
       "normal": "Normal",
       "forbidden": "403",
       "forbidden_tooltip": "API devolvió 403 Forbidden, la cuenta no tiene acceso a Gemini Code Assist",
@@ -161,6 +165,7 @@
       "default": "Predeterminado",
       "overall": "Por cuota general",
       "byGroup": "Por cuota de {{group}}",
+      "byGroupReset": "Por hora de restablecimiento de {{group}}",
       "createdAt": "Por fecha de creación",
       "descTooltip": "Descendente, clic para Ascendente",
       "ascTooltip": "Ascendente, clic para Descendente",
@@ -531,6 +536,15 @@
     "message": "Versión actual v{{current}}, hay una nueva versión disponible.",
     "action": "Descargar ahora"
   },
+  "closeDialog": {
+    "title": "Cerrar ventana",
+    "description": "Elige una acción al cerrar la ventana",
+    "minimize": "Minimizar a la bandeja",
+    "minimizeDesc": "La aplicación seguirá ejecutándose en segundo plano",
+    "quit": "Salir de la aplicación",
+    "quitDesc": "Cerrar completamente la aplicación",
+    "remember": "Recordar mi elección y no volver a preguntar"
+  },
   "group_settings": {
     "title": "Gestión de grupos",
     "group_list": "Lista de grupos",
@@ -569,7 +583,8 @@
       "portInUseTitle": "Puerto en uso",
       "portInUseConfirm": "El puerto {{port}} está en uso. ¿Cerrar el proceso que usa este puerto?",
       "portCloseFailed": "No se pudo cerrar el puerto: {{error}}",
-      "portStillInUse": "El puerto {{port}} sigue en uso."
+      "portStillInUse": "El puerto {{port}} sigue en uso.",
+      "portInUseAction": "Cerrar el puerto y reintentar"
     },
     "token": {
       "desc": "Pega el contenido de auth.json o datos JSON de cuentas",
@@ -635,6 +650,8 @@
     "sort": {
       "weekly": "Cuota semanal",
       "hourly": "Cuota 5 horas",
+      "weeklyReset": "Hora de restablecimiento semanal",
+      "hourlyReset": "Hora de restablecimiento de 5 horas",
       "descTooltip": "Descendente (clic para Ascendente)",
       "ascTooltip": "Ascendente (clic para Descendente)",
       "toggleDirection": "Cambiar dirección",

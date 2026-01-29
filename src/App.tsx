@@ -11,6 +11,7 @@ import { WakeupTasksPage } from './pages/WakeupTasksPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { SideNav } from './components/layout/SideNav';
 import { UpdateNotification } from './components/UpdateNotification';
+import { CloseConfirmDialog } from './components/CloseConfirmDialog';
 import { Page } from './types/navigation';
 import { useAutoRefresh } from './hooks/useAutoRefresh';
 import { changeLanguage, getCurrentLanguage, normalizeLanguage } from './i18n';
@@ -20,6 +21,8 @@ import { DashboardPage } from './pages/DashboardPage';
 function App() {
   const [page, setPage] = useState<Page>('dashboard');
   const [showUpdateNotification, setShowUpdateNotification] = useState(false);
+  const [updateNotificationKey, setUpdateNotificationKey] = useState(0);
+  const [showCloseDialog, setShowCloseDialog] = useState(false);
   
   // 启用自动刷新 hook
   useAutoRefresh();
@@ -67,6 +70,78 @@ function App() {
     };
   }, []);
 
+  useEffect(() => {
+    const handleUpdateRequest = () => {
+      setUpdateNotificationKey(Date.now());
+      setShowUpdateNotification(true);
+    };
+    window.addEventListener('update-check-requested', handleUpdateRequest);
+    return () => {
+      window.removeEventListener('update-check-requested', handleUpdateRequest);
+    };
+  }, []);
+
+  useEffect(() => {
+    let unlisten: UnlistenFn | undefined;
+
+    listen('tray:refresh_quota', async () => {
+      try {
+        await invoke('refresh_current_quota');
+      } catch (error) {
+        console.error('Failed to refresh Antigravity quotas:', error);
+      }
+      try {
+        await invoke('refresh_current_codex_quota');
+      } catch (error) {
+        console.error('Failed to refresh Codex quotas:', error);
+      }
+    }).then((fn) => { unlisten = fn; });
+
+    return () => {
+      if (unlisten) {
+        unlisten();
+      }
+    };
+  }, []);
+
+  // 监听窗口关闭请求事件
+  useEffect(() => {
+    let unlisten: UnlistenFn | undefined;
+
+    listen('window:close_requested', () => {
+      setShowCloseDialog(true);
+    }).then((fn) => { unlisten = fn; });
+
+    return () => {
+      if (unlisten) {
+        unlisten();
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    let unlisten: UnlistenFn | undefined;
+
+    listen<string>('tray:navigate', (event) => {
+      const target = String(event.payload || '');
+      switch (target) {
+        case 'overview':
+        case 'codex':
+        case 'settings':
+          setPage(target as Page);
+          break;
+        default:
+          break;
+      }
+    }).then((fn) => { unlisten = fn; });
+
+    return () => {
+      if (unlisten) {
+        unlisten();
+      }
+    };
+  }, []);
+
   // 窗口拖拽处理
   const handleDragStart = () => {
     getCurrentWindow().startDragging();
@@ -76,7 +151,12 @@ function App() {
     <div className="app-container">
       {/* 更新通知 */}
       {showUpdateNotification && (
-        <UpdateNotification onClose={() => setShowUpdateNotification(false)} />
+        <UpdateNotification key={updateNotificationKey} onClose={() => setShowUpdateNotification(false)} />
+      )}
+
+      {/* 关闭确认对话框 */}
+      {showCloseDialog && (
+        <CloseConfirmDialog onClose={() => setShowCloseDialog(false)} />
       )}
       
       {/* 顶部固定拖拽区域 */}

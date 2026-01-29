@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   Plus,
   RefreshCw,
@@ -37,7 +37,7 @@ import { invoke } from '@tauri-apps/api/core';
 export function CodexAccountsPage() {
   const { t, i18n } = useTranslation();
   const locale = i18n.language || 'zh-CN';
-  const oauthPort = 1455;
+
   const {
     accounts,
     currentAccount,
@@ -58,7 +58,7 @@ export function CodexAccountsPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'FREE' | 'PLUS' | 'PRO' | 'TEAM' | 'ENTERPRISE'>('all');
-  const [sortBy, setSortBy] = useState<'weekly' | 'hourly' | 'created_at'>('created_at');
+  const [sortBy, setSortBy] = useState<'weekly' | 'hourly' | 'created_at' | 'weekly_reset' | 'hourly_reset'>('created_at');
   const [sortDirection, setSortDirection] = useState<'desc' | 'asc'>('asc');
   const [switching, setSwitching] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
@@ -69,6 +69,7 @@ export function CodexAccountsPage() {
   const [oauthUrl, setOauthUrl] = useState('');
   const [oauthUrlCopied, setOauthUrlCopied] = useState(false);
   const [oauthPrepareError, setOauthPrepareError] = useState<string | null>(null);
+  const [oauthPortInUse, setOauthPortInUse] = useState<number | null>(null);
   const [tokenInput, setTokenInput] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<{ ids: string[]; message: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -127,11 +128,12 @@ export function CodexAccountsPage() {
     };
   }, [fetchAccounts, fetchCurrentAccount, t]);
 
-  // 准备 OAuth URL
-  useEffect(() => {
-    if (!showAddModal || addTab !== 'oauth' || oauthUrl) return;
+  const prepareOauthUrl = useCallback(() => {
+    if (!showAddModalRef.current || addTabRef.current !== 'oauth') return;
+    if (oauthActiveRef.current) return;
     oauthActiveRef.current = true;
     setOauthPrepareError(null);
+    setOauthPortInUse(null);
     codexService
       .prepareCodexOAuthUrl()
       .then((url) => {
@@ -145,12 +147,21 @@ export function CodexAccountsPage() {
         oauthActiveRef.current = false;
         const match = String(e).match(/CODEX_OAUTH_PORT_IN_USE:(\d+)/);
         if (match) {
+          const port = Number(match[1]);
+          setOauthPortInUse(Number.isNaN(port) ? null : port);
           setOauthPrepareError(t('codex.oauth.portInUse', { port: match[1] }));
           return;
         }
+        setOauthPrepareError(t('codex.oauth.failed', '授权失败') + ': ' + String(e));
         console.error('准备 Codex OAuth 链接失败:', e);
       });
-  }, [showAddModal, addTab, oauthUrl, t]);
+  }, [t]);
+
+  // 准备 OAuth URL
+  useEffect(() => {
+    if (!showAddModal || addTab !== 'oauth' || oauthUrl) return;
+    prepareOauthUrl();
+  }, [showAddModal, addTab, oauthUrl, prepareOauthUrl]);
 
   // 关闭弹窗时取消 OAuth
   useEffect(() => {
@@ -220,43 +231,13 @@ export function CodexAccountsPage() {
     setOauthUrl('');
     setOauthUrlCopied(false);
     setOauthPrepareError(null);
+    setOauthPortInUse(null);
   };
 
   const openAddModal = (tab: 'oauth' | 'token' | 'import') => {
-    const run = async () => {
-      if (tab === 'oauth') {
-        try {
-          const inUse = await codexService.isCodexOAuthPortInUse();
-          if (inUse) {
-            const confirmed = await confirmDialog(
-              t('codex.oauth.portInUseConfirm', { port: oauthPort }),
-              {
-                title: t('codex.oauth.portInUseTitle'),
-                kind: 'warning',
-                okLabel: t('common.confirm'),
-                cancelLabel: t('common.cancel'),
-              }
-            );
-            if (!confirmed) {
-              return;
-            }
-            await codexService.closeCodexOAuthPort();
-            const stillInUse = await codexService.isCodexOAuthPortInUse();
-            if (stillInUse) {
-              setMessage({ text: t('codex.oauth.portStillInUse', { port: oauthPort }), tone: 'error' });
-              return;
-            }
-          }
-        } catch (e) {
-          setMessage({ text: t('codex.oauth.portCloseFailed', { error: String(e) }), tone: 'error' });
-          return;
-        }
-      }
-      setAddTab(tab);
-      setShowAddModal(true);
-      resetAddModalState();
-    };
-    void run();
+    setAddTab(tab);
+    setShowAddModal(true);
+    resetAddModalState();
   };
 
   const closeAddModal = () => {
@@ -351,6 +332,32 @@ export function CodexAccountsPage() {
     }
   };
 
+  const handleReleaseOauthPort = async () => {
+    const port = oauthPortInUse;
+    if (!port) return;
+    const confirmed = await confirmDialog(
+      t('codex.oauth.portInUseConfirm', { port }),
+      {
+        title: t('codex.oauth.portInUseTitle'),
+        kind: 'warning',
+        okLabel: t('common.confirm'),
+        cancelLabel: t('common.cancel'),
+      }
+    );
+    if (!confirmed) return;
+
+    setOauthPrepareError(null);
+    try {
+      await codexService.closeCodexOAuthPort();
+    } catch (e) {
+      setOauthPrepareError(t('codex.oauth.portCloseFailed', { error: String(e) }));
+      setOauthPortInUse(port);
+      return;
+    }
+
+    prepareOauthUrl();
+  };
+
   const handleOpenOauthUrl = async () => {
     if (!oauthUrl) return;
     try {
@@ -441,14 +448,24 @@ export function CodexAccountsPage() {
         return sortDirection === 'desc' ? diff : -diff;
       }
 
-      const aValue =
-        sortBy === 'weekly'
-          ? a.quota?.weekly_percentage ?? -1
-          : a.quota?.hourly_percentage ?? -1;
-      const bValue =
-        sortBy === 'weekly'
-          ? b.quota?.weekly_percentage ?? -1
-          : b.quota?.hourly_percentage ?? -1;
+      if (sortBy === 'weekly_reset' || sortBy === 'hourly_reset') {
+        const aReset =
+          sortBy === 'weekly_reset'
+            ? a.quota?.weekly_reset_time ?? null
+            : a.quota?.hourly_reset_time ?? null;
+        const bReset =
+          sortBy === 'weekly_reset'
+            ? b.quota?.weekly_reset_time ?? null
+            : b.quota?.hourly_reset_time ?? null;
+        if (aReset === null && bReset === null) return 0;
+        if (aReset === null) return 1;
+        if (bReset === null) return -1;
+        const diff = bReset - aReset;
+        return sortDirection === 'desc' ? diff : -diff;
+      }
+
+      const aValue = sortBy === 'weekly' ? a.quota?.weekly_percentage ?? -1 : a.quota?.hourly_percentage ?? -1;
+      const bValue = sortBy === 'weekly' ? b.quota?.weekly_percentage ?? -1 : b.quota?.hourly_percentage ?? -1;
       const diff = bValue - aValue;
       return sortDirection === 'desc' ? diff : -diff;
     });
@@ -537,6 +554,8 @@ export function CodexAccountsPage() {
               <option value="created_at">{t('codex.sort.createdAt', '按创建时间')}</option>
               <option value="weekly">{t('codex.sort.weekly', '按周配额')}</option>
               <option value="hourly">{t('codex.sort.hourly', '按5小时配额')}</option>
+              <option value="weekly_reset">{t('codex.sort.weeklyReset', '按周配额重置时间')}</option>
+              <option value="hourly_reset">{t('codex.sort.hourlyReset', '按5小时配额重置时间')}</option>
             </select>
           </div>
 
@@ -671,7 +690,7 @@ export function CodexAccountsPage() {
                     </div>
                     {account.quota?.hourly_reset_time && (
                       <span className="quota-reset">
-                        {formatCodexResetTime(account.quota.hourly_reset_time, locale, t)}
+                        {formatCodexResetTime(account.quota.hourly_reset_time, t)}
                       </span>
                     )}
                   </div>
@@ -693,7 +712,7 @@ export function CodexAccountsPage() {
                     </div>
                     {account.quota?.weekly_reset_time && (
                       <span className="quota-reset">
-                        {formatCodexResetTime(account.quota.weekly_reset_time, locale, t)}
+                        {formatCodexResetTime(account.quota.weekly_reset_time, t)}
                       </span>
                     )}
                   </div>
@@ -804,7 +823,7 @@ export function CodexAccountsPage() {
                         {account.quota?.hourly_reset_time && (
                           <div className="quota-footer">
                             <span className="quota-reset">
-                              {formatCodexResetTime(account.quota.hourly_reset_time, locale, t)}
+                              {formatCodexResetTime(account.quota.hourly_reset_time, t)}
                             </span>
                           </div>
                         )}
@@ -827,7 +846,7 @@ export function CodexAccountsPage() {
                         {account.quota?.weekly_reset_time && (
                           <div className="quota-footer">
                             <span className="quota-reset">
-                              {formatCodexResetTime(account.quota.weekly_reset_time, locale, t)}
+                              {formatCodexResetTime(account.quota.weekly_reset_time, t)}
                             </span>
                           </div>
                         )}
@@ -928,10 +947,21 @@ export function CodexAccountsPage() {
                       </p>
                     </div>
                   ) : oauthPrepareError ? (
-                    <div className="add-status error">
-                      <X size={16} />
-                      <span>{oauthPrepareError}</span>
-                    </div>
+                    <>
+                      <div className="add-status error">
+                        <X size={16} />
+                        <span>{oauthPrepareError}</span>
+                      </div>
+                      {oauthPortInUse ? (
+                        <button
+                          className="btn btn-secondary btn-full"
+                          style={{ marginTop: '8px' }}
+                          onClick={handleReleaseOauthPort}
+                        >
+                          {t('codex.oauth.portInUseAction', 'Close port and retry')}
+                        </button>
+                      ) : null}
+                    </>
                   ) : (
                     <div className="oauth-loading">
                       <RefreshCw size={20} className="loading-spinner" />

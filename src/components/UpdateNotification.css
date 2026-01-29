@@ -1,0 +1,64 @@
+.update-overlay {
+  animation: updateFadeIn 0.2s ease;
+}
+
+.update-modal {
+  max-width: 420px;
+  animation: updateSlideIn 0.2s ease;
+}
+
+.update-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.update-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gradient-primary);
+  color: #ffffff;
+  box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
+}
+
+.update-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.update-version {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.update-message {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+@keyframes updateFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes updateSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

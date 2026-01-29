@@ -1444,7 +1444,9 @@ export function WakeupTasksPage({ onNavigate }: WakeupPageProps) {
         await invoke('save_general_config', {
           language: config.language,
           theme: config.theme,
-          autoRefreshMinutes: minMinutes
+          autoRefreshMinutes: minMinutes,
+          codexAutoRefreshMinutes: config.codex_auto_refresh_minutes ?? 10,
+          closeBehavior: config.close_behavior || 'ask',
         });
         
         // 触发配置更新事件（让 useAutoRefresh 重新设置定时器）
