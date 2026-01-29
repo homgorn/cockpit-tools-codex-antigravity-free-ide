@@ -149,6 +149,7 @@
       "desc": "Aucun compte ne correspond aux filtres"
     },
     "view": {
+      "compact": "Vue compacte",
       "list": "Vue liste",
       "grid": "Vue cartes"
     },
@@ -632,6 +633,7 @@
     },
     "search": "Rechercher des comptes...",
     "view": {
+      "compact": "Vue compacte",
       "list": "Vue liste",
       "grid": "Vue cartes"
     },

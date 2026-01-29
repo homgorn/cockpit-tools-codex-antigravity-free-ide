@@ -78,11 +78,32 @@ export const TagEditModal = ({ isOpen, initialTags, availableTags = [], onClose,
     setError('');
   };
 
+  const buildTagsForSave = () => {
+    const rawInput = normalizeTag(inputValue);
+    if (!rawInput) {
+      return { nextTags: tags, error: '' };
+    }
+    if (rawInput.length > MAX_TAG_LENGTH) {
+      return { nextTags: tags, error: '标签长度不能超过 20 个字符' };
+    }
+    const exists = tags.includes(rawInput);
+    if (!exists && tags.length >= MAX_TAGS) {
+      return { nextTags: tags, error: '标签数量不能超过 10 个' };
+    }
+    const merged = exists ? tags : [...tags, rawInput];
+    return { nextTags: merged, error: '' };
+  };
+
   const handleSave = async () => {
     if (saving) return;
+    const { nextTags, error: saveError } = buildTagsForSave();
+    if (saveError) {
+      setError(saveError);
+      return;
+    }
     setSaving(true);
     try {
-      await onSave(tags);
+      await onSave(nextTags);
       onClose();
     } finally {
       setSaving(false);
