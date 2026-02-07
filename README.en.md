@@ -94,6 +94,21 @@ Go to [GitHub Releases](https://github.com/jlcodes99/cockpit-tools/releases) to 
 *   **Windows**: `.msi` (Recommended) or `.exe`
 *   **Linux**: `.deb` (Debian/Ubuntu) or `.AppImage` (Universal)
 
+### Option B: Install with Homebrew (macOS)
+
+> Homebrew is required.
+
+```bash
+brew tap jlcodes99/cockpit-tools https://github.com/jlcodes99/cockpit-tools
+brew install --cask cockpit-tools
+```
+
+If you hit the macOS "App is damaged" warning, you can also install with `--no-quarantine`:
+
+```bash
+brew install --cask --no-quarantine cockpit-tools
+```
+
 ### 🛠️ Troubleshooting
 
 #### macOS says "App is damaged and can't be opened"?
