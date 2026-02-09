@@ -969,7 +969,8 @@
       "openFolder": "Abrir carpeta",
       "edit": "Editar",
       "openRootDir": "Abrir carpeta",
-      "selectPath": "Seleccionar ruta"
+      "selectPath": "Seleccionar ruta",
+      "openWindow": "Abrir ventana"
     },
     "bulkConfirm": {
       "startAll": "¿Iniciar todas las instancias detenidas?",

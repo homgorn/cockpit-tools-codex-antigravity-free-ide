@@ -969,7 +969,8 @@
       "openFolder": "Abrir pasta",
       "edit": "Editar",
       "openRootDir": "Abrir pasta",
-      "selectPath": "Selecionar caminho"
+      "selectPath": "Selecionar caminho",
+      "openWindow": "Abrir janela"
     },
     "bulkConfirm": {
       "startAll": "Iniciar todas as instâncias paradas?",

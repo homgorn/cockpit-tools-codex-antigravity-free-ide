@@ -846,7 +846,8 @@
       "openFolder": "打開目錄",
       "edit": "編輯",
       "openRootDir": "打開目錄",
-      "selectPath": "選擇路徑"
+      "selectPath": "選擇路徑",
+      "openWindow": "定位視窗"
     },
     "bulkConfirm": {
       "startAll": "是否啟動所有已停止的實例？",

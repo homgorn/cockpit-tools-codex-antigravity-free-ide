@@ -846,7 +846,8 @@
       "openFolder": "Ordner öffnen",
       "edit": "Bearbeiten",
       "openRootDir": "Ordner öffnen",
-      "selectPath": "Pfad auswählen"
+      "selectPath": "Pfad auswählen",
+      "openWindow": "Fenster öffnen"
     },
     "bulkConfirm": {
       "startAll": "Alle gestoppten Instanzen starten?",

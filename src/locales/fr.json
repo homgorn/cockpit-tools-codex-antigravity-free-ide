@@ -846,7 +846,8 @@
       "openFolder": "Ouvrir le dossier",
       "edit": "Modifier",
       "openRootDir": "Ouvrir le dossier",
-      "selectPath": "Choisir le chemin"
+      "selectPath": "Choisir le chemin",
+      "openWindow": "Ouvrir la fenêtre"
     },
     "bulkConfirm": {
       "startAll": "Démarrer toutes les instances arrêtées ?",

@@ -846,7 +846,8 @@
       "openFolder": "Otwórz folder",
       "edit": "Edytuj",
       "openRootDir": "Otwórz folder",
-      "selectPath": "Wybierz ścieżkę"
+      "selectPath": "Wybierz ścieżkę",
+      "openWindow": "Otwórz okno"
     },
     "bulkConfirm": {
       "startAll": "Uruchomić wszystkie zatrzymane instancje?",

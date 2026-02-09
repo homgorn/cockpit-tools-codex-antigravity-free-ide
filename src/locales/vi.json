@@ -846,7 +846,8 @@
       "openFolder": "Mở thư mục",
       "edit": "Chỉnh sửa",
       "openRootDir": "Mở thư mục",
-      "selectPath": "Chọn đường dẫn"
+      "selectPath": "Chọn đường dẫn",
+      "openWindow": "Mở cửa sổ"
     },
     "bulkConfirm": {
       "startAll": "Bắt đầu tất cả các phiên bản đang dừng?",

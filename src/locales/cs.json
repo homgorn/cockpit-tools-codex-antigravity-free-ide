@@ -846,7 +846,8 @@
       "openFolder": "Otevřít složku",
       "edit": "Upravit",
       "openRootDir": "Otvřít složku",
-      "selectPath": "Vybrat cestu"
+      "selectPath": "Vybrat cestu",
+      "openWindow": "Otevřít okno"
     },
     "bulkConfirm": {
       "startAll": "Spustit všechny zastavené instance?",

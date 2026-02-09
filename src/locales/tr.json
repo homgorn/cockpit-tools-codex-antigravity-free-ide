@@ -846,7 +846,8 @@
       "openFolder": "Klasörü aç",
       "edit": "Düzenle",
       "openRootDir": "Klasörü aç",
-      "selectPath": "Yol seç"
+      "selectPath": "Yol seç",
+      "openWindow": "Pencereyi aç"
     },
     "bulkConfirm": {
       "startAll": "Tüm durdurulmuş oturumlar başlatılsın mı?",

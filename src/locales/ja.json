@@ -846,7 +846,8 @@
       "openFolder": "フォルダーを開く",
       "edit": "編集",
       "openRootDir": "フォルダーを開く",
-      "selectPath": "フォルダーを選択"
+      "selectPath": "フォルダーを選択",
+      "openWindow": "ウィンドウを開く"
     },
     "bulkConfirm": {
       "startAll": "停止中のすべてのインスタンスを開始しますか？",

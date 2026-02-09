@@ -846,7 +846,8 @@
       "openFolder": "Apri cartella",
       "edit": "Modifica",
       "openRootDir": "Apri cartella",
-      "selectPath": "Seleziona percorso"
+      "selectPath": "Seleziona percorso",
+      "openWindow": "Apri finestra"
     },
     "bulkConfirm": {
       "startAll": "Avviare tutte le istanze fermate?",

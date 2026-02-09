@@ -846,7 +846,8 @@
       "openFolder": "폴더 열기",
       "edit": "편집",
       "openRootDir": "폴더 열기",
-      "selectPath": "폴더 선택"
+      "selectPath": "폴더 선택",
+      "openWindow": "창 열기"
     },
     "bulkConfirm": {
       "startAll": "정지된 모든 인스턴스를 시작할까요?",

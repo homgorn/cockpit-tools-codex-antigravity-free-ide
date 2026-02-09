@@ -969,7 +969,8 @@
       "openFolder": "فتح المجلد",
       "edit": "تعديل",
       "openRootDir": "فتح المجلد",
-      "selectPath": "اختيار المجلد"
+      "selectPath": "اختيار المجلد",
+      "openWindow": "فتح النافذة"
     },
     "bulkConfirm": {
       "startAll": "تشغيل جميع المثيلات المتوقفة؟",

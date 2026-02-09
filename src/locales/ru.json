@@ -846,7 +846,8 @@
       "openFolder": "Открыть папку",
       "edit": "Редактировать",
       "openRootDir": "Открыть папку",
-      "selectPath": "Выбрать путь"
+      "selectPath": "Выбрать путь",
+      "openWindow": "Открыть окно"
     },
     "bulkConfirm": {
       "startAll": "Запустить все остановленные инстансы?",
